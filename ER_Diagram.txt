@@ -1,0 +1,99 @@
+
+buildings[icon: building, color: Green]{
+  id serail pk
+  building_name string unique not null 
+  building_code string unique
+  numbers_of_floors int not null
+}
+
+floors[icon: square]{
+  floor_id serial pk
+  floor_name string ("e.g- ground_floor, 1, 2")
+  building_id int fk
+}
+
+elevator_shafts[icon: elevenlabs, color: Red]{
+  id serial pk
+  building_id int fk
+  lower_terminal_floor_id int fk
+  upper_terminal_floor_id int fk
+  is_operationl boolen default ture
+}
+
+elevators[icon: box, color: Black]{
+  id serial pk
+  elevator_shaft_id int fk
+  elevator_capacity int not null
+}
+
+// One elevator serves multiple floors
+// AND One floor can be served by multiple elevators
+//  This is a many-to-many (M:N) relationship
+
+// it is junction table
+elevator_floor_mappings[icon:map, color: Blue]{
+  elevator_id int fk
+  floor_id int fk
+  PRIMARY_KEY (elevator_id,floor_id)
+}
+
+floor_requests[icon: user, color: Green]{
+  id serial pk
+  origin_floor_id int fk
+  elevator_shaft_id int fk
+  direction enum[up, down]
+  request_status enum[pending,assigned,completed]
+  requestedAt timestamp
+}
+
+ride_allocations[icon: road, color: Orange]{
+  id serial pk
+  request_id int fk
+  elevator_id int fk
+  pickup_floor_id int fk
+  dropoff_floor_id int fk
+  ride_status enum[moving,completed]
+
+  createdAt timestamp
+}
+
+ride_logs[icon: log, color: Green]{
+  id serail pk
+  ride_id int fk
+  elevator_id int fk
+  ride_date timestamp
+}
+
+elevator_current_status[color: Blue] {
+  elevator_id int fk
+  current_floor int fk
+  elevator_condition enum[idle,moving,maintenance]
+
+  updatedAt timestamp
+}
+
+ 
+floors.building_id > buildings.id
+elevator_shafts.building_id > buildings.id: [color: black]
+elevator_shafts.upper_terminal_floor_id > floors.floor_id: [color: black]
+elevator_shafts.lower_terminal_floor_id > floors.floor_id: [color: black]
+
+elevators.elevator_shaft_id - elevator_shafts.id: [color: black]
+
+elevator_floor_mappings.elevator_id > elevators.id: [color: black]
+elevator_floor_mappings.floor_id > floors.floor_id: [color: black]
+
+floor_requests.origin_floor_id > floors.floor_id: [color: black]
+floor_requests.elevator_shaft_id > elevator_shafts.id: [color: black]
+
+ride_allocations.request_id - floor_requests.id: [color: black]
+ride_allocations.elevator_id > elevators.id: [color: black]
+ride_allocations.pickup_floor_id > floors.floor_id: [color: black]
+ride_allocations.dropoff_floor_id > floors.floor_id: [color: black]
+
+ride_logs.ride_id - ride_allocations.id: [color: black]
+ride_logs.elevator_id - elevators.id: [color: black]
+
+elevator_current_status.elevator_id - elevators.id: [color: black]
+elevator_current_status.current_floor > floors.floor_id: [color: black]
+
